@@ -31,5 +31,10 @@ data = [
 ]
 
 
-# /students-by-score/50/99
-# [{ "id": 5, "name": "G", "score": 50 }, { "id": 10, "name": "Y", "score": 92 }]
+@app.route("/students-by-score/<int:value_min>/<int:value_max>")
+def view_students_by_score(value_min, value_max):
+    data_filter = []
+    for x in data:
+        if x["score"] >= value_min and x["score"] <= value_max:
+            data_filter.append(x)
+    return data_filter
