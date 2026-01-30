@@ -31,7 +31,7 @@ data = [
 ]
 
 
-@app.route("/students-by-score/<int:value_min>/<int:value_max>")
+@app.route("/students-by-score/<int:value_min>/<int_value_max>")
 def view_students_by_score(value_min, value_max):
     data_filter = []
     for x in data:
