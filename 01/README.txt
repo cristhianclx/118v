@@ -3,7 +3,8 @@ python -m venv venv # crea un entorno virtual
 
 # activar el entorno virtual
 source venv/bin/activate # linux
-source venv\Scripts\activate.bat # windows
+.\venv\Scripts\activate.bat # windows
+.\venv\Scripts\Activate.ps1 # windows
 
 pip install -r requirements.txt
 pip install -r requirements.txt --upgrade
