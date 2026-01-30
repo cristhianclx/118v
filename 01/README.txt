@@ -22,3 +22,7 @@ https://www.python.org/downloads/
 #
 source venv\Scripts\activate.bat
 flask --app main run --reload
+
+# windows - permisos
+# abrir power shell como administrador
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
