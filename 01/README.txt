@@ -1,5 +1,5 @@
 # iniciar el proyecto
-python3 -m venv venv # crea un entorno virtual
+python -m venv venv # crea un entorno virtual
 
 # activar el entorno virtual
 source venv/bin/activate # linux
