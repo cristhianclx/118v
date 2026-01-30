@@ -20,7 +20,7 @@ https://www.python.org/downloads/
 
 
 #
-source venv\Scripts\activate.bat
+.\venv\Scripts\Activate.ps1
 flask --app main run --reload
 
 # windows - permisos
