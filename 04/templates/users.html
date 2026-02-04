@@ -20,17 +20,23 @@
             <th scope="col">Last name</th>
             <th scope="col">Age</th>
             <th scope="col">Created</th>
+            <th scope="col">Options</th>
             </tr>
         </thead>
         <tbody>
             {% for item in items %}
-            <tr>
+            <tr {% if item.age >= 60 %} class="table-danger" {% endif %}>
             <th scope="row">{{ item.id }}</th>
             <td>{{ item.code }}</td>
             <td>{{ item.first_name }}</td>
             <td>{{ item.last_name }}</td>
             <td>{{ item.age }}</td>
             <td>{{ item.created.strftime('%Y-%m-%d|%H:%M:%S') }}</td>
+            <td>
+                <a href="{{ url_for('users_by_id', id=item.id) }}" class="btn btn-info">View</a>
+                <a href="{{ url_for('users_edit_by_id', id=item.id) }}" class="btn btn-info">Edit</a>
+                <a href="{{ url_for('users_delete_by_id', id=item.id) }}" class="btn btn-danger">Delete</a>
+            </td>
             </tr>
             {% endfor %}
         </tbody>

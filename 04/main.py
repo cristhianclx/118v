@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.sql import func
@@ -69,6 +69,38 @@ def users_add():
         return render_template("users_add.html", information="User added")
 
 
+@app.route("/users/<int:id>")
+def users_by_id(id):
+    data = User.query.get_or_404(id)
+    return render_template("users_details.html", item=data)
+
+
+@app.route("/users/<int:id>/edit", methods=["GET", "POST"])
+def users_edit_by_id(id):
+    data = User.query.get_or_404(id)
+    if request.method == "GET":
+        return render_template("users_edit.html", item=data)
+    if request.method == "POST":
+        data.code = request.form["code"]
+        data.first_name = request.form["first_name"]
+        data.last_name = request.form["last_name"]
+        data.age = request.form["age"]
+        db.session.add(data)
+        db.session.commit()
+        return render_template("users_edit.html", item=data, information="User edited")
+
+
+@app.route("/users/<int:id>/delete", methods=["GET", "POST"])
+def users_delete_by_id(id):
+    data = User.query.get_or_404(id)
+    if request.method == "GET":
+        return render_template("users_delete.html", item=data)
+    if request.method == "POST":
+        db.session.delete(data)
+        db.session.commit()
+        return redirect(url_for('users'))
+
+
 @app.route("/messages")
 def messages():
     data = Message.query.all()
@@ -89,11 +121,8 @@ def messages_add():
         return render_template("messages_add.html", information="Message added")
 
 
-# Read    /users/<id>/ => muestra datos de un usuario con el id
-# Update  /users/<id>/edit/ => actualizar datos de un usuarios (formulario)
-# Delete  /users/<id>/delete/ => pregunte si vas a borrar
-
-
 ## LABORATORIO
-## /messages
-## /messages/add
+
+# Read    /messages/<id>/ => muestra datos de un mensaje con el id
+# Update  /messages/<id>/edit/ => actualizar datos de un mensaje (formulario)
+# Delete  /messages/<id>/delete/ => pregunte si vas a borrar
