@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.sql import func
@@ -14,6 +14,7 @@ migrate = Migrate(app, db)
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    code = db.Column(db.String(11), nullable=False)
     first_name = db.Column(db.String(128), nullable=False)
     last_name = db.Column(db.String(128), nullable=False)
     age = db.Column(db.Integer, nullable=True)
@@ -44,3 +45,30 @@ def view_health():
         "status": "ok",
         "v": "4"
     }
+
+
+@app.route("/users")
+def users():
+    data = User.query.all()
+    return render_template("users.html", items=data)
+
+
+@app.route("/users/add", methods=["GET", "POST"])
+def users_add():
+    if request.method == "GET":
+        return render_template("users_add.html")
+    if request.method == "POST":
+        item = User(
+            code=request.form["code"],
+            first_name=request.form["first_name"],
+            last_name=request.form["last_name"],
+            age=request.form["age"],
+        )
+        db.session.add(item)
+        db.session.commit()
+        return render_template("users_add.html", information="Changes saved")
+
+
+# Read    /users/<id>/ => muestra datos de un usuario con el id
+# Update  /users/<id>/edit/ => actualizar datos de un usuarios (formulario)
+# Delete  /users/<id>/delete/ => pregunte si vas a borrar
