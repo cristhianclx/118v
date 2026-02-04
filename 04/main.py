@@ -66,9 +66,34 @@ def users_add():
         )
         db.session.add(item)
         db.session.commit()
-        return render_template("users_add.html", information="Changes saved")
+        return render_template("users_add.html", information="User added")
+
+
+@app.route("/messages")
+def messages():
+    data = Message.query.all()
+    return render_template("messages.html", items=data)
+
+
+@app.route("/messages/add", methods=["GET", "POST"])
+def messages_add():
+    if request.method == "GET":
+        return render_template("messages_add.html")
+    if request.method == "POST":
+        item = Message(
+            content=request.form["content"],
+            user_id=request.form["user_id"],
+        )
+        db.session.add(item)
+        db.session.commit()
+        return render_template("messages_add.html", information="Message added")
 
 
 # Read    /users/<id>/ => muestra datos de un usuario con el id
 # Update  /users/<id>/edit/ => actualizar datos de un usuarios (formulario)
 # Delete  /users/<id>/delete/ => pregunte si vas a borrar
+
+
+## LABORATORIO
+## /messages
+## /messages/add
