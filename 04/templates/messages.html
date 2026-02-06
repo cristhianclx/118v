@@ -18,7 +18,8 @@
             <th scope="col">Content</th>
             <th scope="col">User ID</th>
             <th scope="col">Created</th>
-            </tr>
+            <th scope="col">Options</th>
+            </tr>            
         </thead>
         <tbody>
             {% for item in items %}
@@ -27,6 +28,11 @@
             <td>{{ item.content }}</td>
             <td>{{ item.user_id }}</td>
             <td>{{ item.created.strftime('%Y-%m-%d|%H:%M:%S') }}</td>
+                        <td>
+                <a href="{{ url_for('messages_by_id', id=item.id) }}" class="btn btn-info">View</a>
+                <a href="{{ url_for('messages_edit_by_id', id=item.id) }}" class="btn btn-info">Edit</a>
+                <a href="{{ url_for('messages_delete_by_id', id=item.id) }}" class="btn btn-danger">Delete</a>
+            </td>
             </tr>
             {% endfor %}
         </tbody>

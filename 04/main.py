@@ -121,6 +121,36 @@ def messages_add():
         return render_template("messages_add.html", information="Message added")
 
 
+@app.route("/messages/<int:id>")
+def messages_by_id(id):
+    data = Message.query.get_or_404(id)
+    return render_template("messages_details.html", item=data)
+
+
+@app.route("/messages/<int:id>/edit", methods=["GET", "POST"])
+def messages_edit_by_id(id):
+    data = Message.query.get_or_404(id)
+    if request.method == "GET":
+        return render_template("messages_edit.html", item=data)
+    if request.method == "POST":
+        data.content = request.form["content"]
+        data.user_id = request.form["user_id"]
+        db.session.add(data)
+        db.session.commit()
+        return render_template("messages_edit.html", item=data, information="Message edited")
+
+
+@app.route("/messages/<int:id>/delete", methods=["GET", "POST"])
+def messages_delete_by_id(id):
+    data = Message.query.get_or_404(id)
+    if request.method == "GET":
+        return render_template("messages_delete.html", item=data)
+    if request.method == "POST":
+        db.session.delete(data)
+        db.session.commit()
+        return redirect(url_for('messages'))
+
+
 ## LABORATORIO
 
 # Read    /messages/<id>/ => muestra datos de un mensaje con el id
