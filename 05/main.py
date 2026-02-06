@@ -23,23 +23,18 @@ class ByNameResource(Resource):
         abilities = []
         for x in abilities_full:
             abilities.append(x["ability"]["name"])
+        stats_full = raw["stats"]
+        stats = {}
+        for x in stats_full:
+            stats[x["stat"]["name"]] = x["base_stat"]
         return {
             "name": name,
             "weight": raw["weight"],
             "height": raw["height"],
             "abilities": abilities,
+            "stats": stats,
         }
 
 
 api.add_resource(HealthResource, '/health')
 api.add_resource(ByNameResource, '/api/by-name/<name>')
-
-
-# https://pokeapi.co/api/v2/pokemon/ditto
-# al API que ya tenemos agregale, el campo stats
-# stats: {
-#   hp:48,
-#   attack:48,
-#   defense:48,
-#   ...
-# }
