@@ -67,6 +67,20 @@ class Message(db.Model):
         return "<Message: {}>".format(self.id)
 
 
+class MessageSchema(ma.SQLAlchemyAutoSchema):
+    user = ma.Nested(UserSchema)
+
+    class Meta:
+        model = Message
+        load_instance = True
+        include_fk = True
+        datetimeformat = "%Y-%m-%d %H:%M:%S"
+
+
+message_schema = MessageSchema()
+messages_schema = MessageSchema(many = True)
+
+
 class HealthResource(Resource):
     def get(self):
         return {
@@ -120,67 +134,32 @@ class UsersV2Resource(Resource):
 class MessagesResource(Resource):
     def get(self):
         items = Message.query.all()
-        data = []
-        for x in items:
-            data.append({
-                "id": x.id,
-                "title": x.title,
-                "content": x.content,
-                "priority": x.priority,
-                "importance": x.importance,
-                "user_id": x.user_id,
-            })
-        return data
+        return messages_schema.dump(items)
 
     def post(self):
         data = request.get_json()
-        item = Message(
-            title=data["title"],
-            content=data["content"],
-            importance=data["importance"],
-            user_id=data["user_id"],
-        )
+        item = Message(**data)
         db.session.add(item)
         db.session.commit()
-        return {
-            "id": item.id,
-            "title": item.title,
-            "content": item.content,
-            "importance": item.importance,
-            "user_id": item.user_id,
-        }, 201
+        return message_schema.dump(item), 201
 
 
 class MessagesIDResource(Resource):
     def get(self, id):
         item = Message.query.get_or_404(id)
-        return {
-            "id": item.id,
-            "title": item.title,
-            "content": item.content,
-            "priority": item.priority,
-            "importance": item.importance,
-            "user_id": item.user_id,
-        }
+        return message_schema.dump(item)
     
     def patch(self, id):
         item = Message.query.get_or_404(id)
         data = request.get_json()
-        item.title = data.get("title", item.title)
-        item.content = data.get("content", item.content)
-        item.priority = data.get("priority", item.priority)
-        item.importance = data.get("importance", item.importance)
-        item.user_id = data.get("user_id", item.user_id)
+        message_schema.load(
+            data,
+            instance=item,
+            partial=True,
+        )
         db.session.add(item)
         db.session.commit()
-        return {
-            "id": item.id,
-            "title": item.title,
-            "content": item.content,
-            "priority": item.priority,
-            "importance": item.importance,
-            "user_id": item.user_id,
-        }
+        return message_schema.dump(item)
 
     def delete(self, id):
         item = Message.query.get_or_404(id)
@@ -195,7 +174,3 @@ api.add_resource(UsersIDResource, "/users/<int:id>")
 api.add_resource(UsersV2Resource, "/users/v2")
 api.add_resource(MessagesResource, "/messages")
 api.add_resource(MessagesIDResource, "/messages/<int:id>")
-
-
-# LABORATORIO
-# implementar marshmallow para /messages y /messages/id
