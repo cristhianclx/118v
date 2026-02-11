@@ -1,3 +1,4 @@
+import math
 from flask import Flask, request
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -181,13 +182,17 @@ class MessagesIDResource(Resource):
 
 class UsersByIDMessagesResource(Resource):
     def get(self, user_id):
-        page = request.args.get("page", 1)
-        page_size = request.args.get("page_size", 5)
-        print(page)
-        print(page_size)
+        page = int(request.args.get("page", 1))
+        page_size = int(request.args.get("page_size", 5))
         user = User.query.get_or_404(user_id)
         items = Message.query.filter_by(user = user).all()
-        return messages_simple_schema.dump(items)
+        pages = math.ceil(len(items) / page_size)
+        if page > pages:
+            return {"error": "invalid page"}, 400
+        return {
+            "count": len(items),
+            "data": messages_simple_schema.dump(items[(page - 1) * page_size : page * page_size]),
+        }
 
     def post(self, user_id):
         user = User.query.get_or_404(user_id)
@@ -206,11 +211,3 @@ api.add_resource(UsersV2Resource, "/users/v2")
 api.add_resource(MessagesResource, "/messages")
 api.add_resource(MessagesIDResource, "/messages/<int:id>")
 api.add_resource(UsersByIDMessagesResource, "/users/<int:user_id>/messages")
-
-
-# LABORATORIO
-# En el GET: /users/<int:user_id>/messages/, en la respuesta
-# { count: 10, data: [ {}, {} ] }
-# En el GET: /users/<int:user_id>/messages/, implementa un paginador
-#     /users/<int:user_id>/messages/?page=1&page_size=5
-#     /users/<int:user_id>/messages/?page=2&page_size=5
