@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
-from flask_restful import Resource, Api
+from flask_restful_swagger_3 import swagger, Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 
@@ -24,6 +24,7 @@ class User(db.Model):
     last_name = db.Column(db.String(128), nullable=False)
     age = db.Column(db.Integer, nullable=True)
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
     def __repr__(self):
         return "<User: {}>".format(self.id)
 
@@ -36,7 +37,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
 
 
 user_schema = UserSchema()
-users_schema = UserSchema(many = True)
+users_schema = UserSchema(many=True)
 
 
 class UserV2Schema(ma.SQLAlchemySchema):
@@ -50,7 +51,7 @@ class UserV2Schema(ma.SQLAlchemySchema):
 
 
 user_v2_schema = UserV2Schema()
-users_v2_schema = UserV2Schema(many = True)
+users_v2_schema = UserV2Schema(many=True)
 
 
 class Message(db.Model):
@@ -63,6 +64,7 @@ class Message(db.Model):
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship("User", backref="user")
+
     def __repr__(self):
         return "<Message: {}>".format(self.id)
 
@@ -78,7 +80,7 @@ class MessageSchema(ma.SQLAlchemyAutoSchema):
 
 
 message_schema = MessageSchema()
-messages_schema = MessageSchema(many = True)
+messages_schema = MessageSchema(many=True)
 
 
 class MessageSimpleSchema(ma.SQLAlchemyAutoSchema):
@@ -89,10 +91,11 @@ class MessageSimpleSchema(ma.SQLAlchemyAutoSchema):
 
 
 message_simple_schema = MessageSimpleSchema()
-messages_simple_schema = MessageSimpleSchema(many = True)
+messages_simple_schema = MessageSimpleSchema(many=True)
 
 
 class HealthResource(Resource):
+    @swagger.tags(["health"])
     def get(self):
         return {
             "status": "ok",
@@ -101,6 +104,7 @@ class HealthResource(Resource):
 
 
 class UsersResource(Resource):
+    @swagger.tags(["users"])
     def get(self):
         items = User.query.all()
         return users_schema.dump(items)
@@ -117,7 +121,7 @@ class UsersIDResource(Resource):
     def get(self, id):
         item = User.query.get_or_404(id)
         return user_schema.dump(item)
-    
+
     def patch(self, id):
         item = User.query.get_or_404(id)
         data = request.get_json()
@@ -140,7 +144,7 @@ class UsersV2Resource(Resource):
     def get(self):
         items = User.query.all()
         return users_v2_schema.dump(items)
-    
+
 
 class MessagesResource(Resource):
     def get(self):
@@ -159,7 +163,7 @@ class MessagesIDResource(Resource):
     def get(self, id):
         item = Message.query.get_or_404(id)
         return message_schema.dump(item)
-    
+
     def patch(self, id):
         item = Message.query.get_or_404(id)
         data = request.get_json()
@@ -181,12 +185,8 @@ class MessagesIDResource(Resource):
 
 class UsersByIDMessagesResource(Resource):
     def get(self, user_id):
-        page = request.args.get("page", 1)
-        page_size = request.args.get("page_size", 5)
-        print(page)
-        print(page_size)
         user = User.query.get_or_404(user_id)
-        items = Message.query.filter_by(user = user).all()
+        items = Message.query.filter_by(user=user).all()
         return messages_simple_schema.dump(items)
 
     def post(self, user_id):
@@ -206,11 +206,3 @@ api.add_resource(UsersV2Resource, "/users/v2")
 api.add_resource(MessagesResource, "/messages")
 api.add_resource(MessagesIDResource, "/messages/<int:id>")
 api.add_resource(UsersByIDMessagesResource, "/users/<int:user_id>/messages")
-
-
-# LABORATORIO
-# En el GET: /users/<int:user_id>/messages/, en la respuesta
-# { count: 10, data: [ {}, {} ] }
-# En el GET: /users/<int:user_id>/messages/, implementa un paginador
-#     /users/<int:user_id>/messages/?page=1&page_size=5
-#     /users/<int:user_id>/messages/?page=2&page_size=5

@@ -1,0 +1,10 @@
+black
+flake8
+Flask==3.1.2
+flask-restful
+flask-restful-swagger-3
+Flask-SQLAlchemy
+flask-marshmallow
+Flask-Migrate
+gunicorn[gevent]
+marshmallow-sqlalchemy
