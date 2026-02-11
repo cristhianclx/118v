@@ -1,4 +1,5 @@
 from flask import Flask, request
+from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
@@ -12,6 +13,7 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 api = Api(app)
+ma = Marshmallow(app)
 
 
 class User(db.Model):
@@ -26,12 +28,38 @@ class User(db.Model):
         return "<User: {}>".format(self.id)
 
 
+class UserSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+        load_instance = True
+        datetimeformat = "%Y-%m-%d %H:%M:%S"
+
+
+user_schema = UserSchema()
+users_schema = UserSchema(many = True)
+
+
+class UserV2Schema(ma.SQLAlchemySchema):
+    code = ma.auto_field()
+    first_name = ma.auto_field()
+    last_name = ma.auto_field()
+
+    class Meta:
+        model = User
+        datetimeformat = "%Y-%m-%d %H:%M:%S"
+
+
+user_v2_schema = UserV2Schema()
+users_v2_schema = UserV2Schema(many = True)
+
+
 class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=True)
     importance = db.Column(db.String(100), nullable=True)
+    priority = db.Column(db.String(100), nullable=True)
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship("User", backref="user")
@@ -50,63 +78,31 @@ class HealthResource(Resource):
 class UsersResource(Resource):
     def get(self):
         items = User.query.all()
-        data = []
-        for x in items:
-            data.append({
-                "id": x.id,
-                "code": x.code,
-                "first_name": x.first_name,
-                "last_name": x.last_name,
-                "age": x.age,
-            })
-        return data
+        return users_schema.dump(items)
 
     def post(self):
         data = request.get_json()
-        item = User(
-            code=data["code"],
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            age=data["age"],
-        )
+        item = User(**data)
         db.session.add(item)
         db.session.commit()
-        return {
-            "id": item.id,
-            "code": item.code,
-            "first_name": item.first_name,
-            "last_name": item.last_name,
-            "age": item.age,
-        }, 201
+        return user_schema.dump(item), 201
 
 
 class UsersIDResource(Resource):
     def get(self, id):
         item = User.query.get_or_404(id)
-        return {
-            "id": item.id,
-            "code": item.code,
-            "first_name": item.first_name,
-            "last_name": item.last_name,
-            "age": item.age,
-        }
+        return user_schema.dump(item)
     
     def patch(self, id):
         item = User.query.get_or_404(id)
         data = request.get_json()
-        item.code = data.get("code", item.code)
-        item.first_name = data.get("first_name", item.first_name)
-        item.last_name = data.get("last_name", item.last_name)
-        item.age = data.get("age", item.age)
-        db.session.add(item)
+        user_schema.load(
+            data,
+            instance=item,
+            partial=True,
+        )
         db.session.commit()
-        return {
-            "id": item.id,
-            "code": item.code,
-            "first_name": item.first_name,
-            "last_name": item.last_name,
-            "age": item.age,
-        }
+        return user_schema.dump(item)
 
     def delete(self, id):
         item = User.query.get_or_404(id)
@@ -114,6 +110,12 @@ class UsersIDResource(Resource):
         db.session.commit()
         return {}, 204
 
+
+class UsersV2Resource(Resource):
+    def get(self):
+        items = User.query.all()
+        return users_v2_schema.dump(items)
+    
 
 class MessagesResource(Resource):
     def get(self):
@@ -124,6 +126,7 @@ class MessagesResource(Resource):
                 "id": x.id,
                 "title": x.title,
                 "content": x.content,
+                "priority": x.priority,
                 "importance": x.importance,
                 "user_id": x.user_id,
             })
@@ -148,17 +151,51 @@ class MessagesResource(Resource):
         }, 201
 
 
+class MessagesIDResource(Resource):
+    def get(self, id):
+        item = Message.query.get_or_404(id)
+        return {
+            "id": item.id,
+            "title": item.title,
+            "content": item.content,
+            "priority": item.priority,
+            "importance": item.importance,
+            "user_id": item.user_id,
+        }
+    
+    def patch(self, id):
+        item = Message.query.get_or_404(id)
+        data = request.get_json()
+        item.title = data.get("title", item.title)
+        item.content = data.get("content", item.content)
+        item.priority = data.get("priority", item.priority)
+        item.importance = data.get("importance", item.importance)
+        item.user_id = data.get("user_id", item.user_id)
+        db.session.add(item)
+        db.session.commit()
+        return {
+            "id": item.id,
+            "title": item.title,
+            "content": item.content,
+            "priority": item.priority,
+            "importance": item.importance,
+            "user_id": item.user_id,
+        }
+
+    def delete(self, id):
+        item = Message.query.get_or_404(id)
+        db.session.delete(item)
+        db.session.commit()
+        return {}, 204
+
+
 api.add_resource(HealthResource, "/health")
 api.add_resource(UsersResource, "/users")
 api.add_resource(UsersIDResource, "/users/<int:id>")
+api.add_resource(UsersV2Resource, "/users/v2")
 api.add_resource(MessagesResource, "/messages")
+api.add_resource(MessagesIDResource, "/messages/<int:id>")
 
 
-## LABORATORIO
-## messages (priority => nuevo campo)
-##    flask --app main db migrate
-#     flask --app main db upgrade
-## /messages/<id> REST
-##   GET => { id: 1, .... }
-##   PATCH ({title: 1234}) => { id: 1, ... }
-##   DELETE => {}
+# LABORATORIO
+# implementar marshmallow para /messages y /messages/id
