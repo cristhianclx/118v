@@ -54,3 +54,6 @@ def view_login():
     return {
         "access_token": access_token
     }
+
+
+# https://flask-jwt-extended.readthedocs.io/en/stable/options.html#general-options
