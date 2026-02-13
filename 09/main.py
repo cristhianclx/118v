@@ -56,3 +56,4 @@ def handle_ws_messages(data, methods=["GET", "POST"]):
 # marshmallow (message)
 # message (priority)
 # mensaje (visualizacion) - created
+# mensaje (visualizacion) - priority high (poner en color rojo)
