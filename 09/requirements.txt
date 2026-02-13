@@ -1,4 +1,6 @@
 Flask==3.1.2
-flask-migrate
 Flask-SQLAlchemy
 flask-socketio
+flask-marshmallow
+Flask-Migrate
+marshmallow-sqlalchemy

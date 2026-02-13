@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
@@ -12,6 +13,8 @@ db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
 
+ma = Marshmallow(app)
+
 socketio = SocketIO(app)
 
 
@@ -19,11 +22,23 @@ class Message(db.Model):
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nickname = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=True)
+    priority = db.Column(db.String(100), nullable=True)
+    content = db.Column(db.Text, nullable=True)    
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     def __repr__(self):
         return "<Message: {}>".format(self.id)
     
+
+class MessageSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Message
+        load_instance = True
+        datetimeformat = "%Y-%m-%d %H:%M:%S"
+
+
+message_schema = MessageSchema()
+messages_schema = MessageSchema(many = True)
+
 
 @app.route("/health")
 def view_health():
@@ -49,11 +64,4 @@ def handle_ws_messages(data, methods=["GET", "POST"]):
     item = Message(**data)
     db.session.add(item)
     db.session.commit()
-    socketio.emit("ws-messages-responses", data)
-
-
-# LABORATORIO
-# marshmallow (message)
-# message (priority)
-# mensaje (visualizacion) - created
-# mensaje (visualizacion) - priority high (poner en color rojo)
+    socketio.emit("ws-messages-responses", message_schema.dump(item))

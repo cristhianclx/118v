@@ -14,6 +14,10 @@
     <input type="text" class="form-control" id="nickname" />
   </div>
   <div class="mb-3">
+    <label class="form-label">Priority</label>
+    <input type="text" class="form-control" id="priority" />
+  </div>
+  <div class="mb-3">
     <label class="form-label">Content</label>
     <input type="text" class="form-control" id="content" />
   </div>
@@ -21,7 +25,7 @@
   <hr>
   <div id="messages">
     {% for item in items %}
-    <p><b>{{ item.nickname }}:</b> {{ item.content }}</p>
+    <p {% if item.priority == "high" %}style="color:red;"{% endif %}><small>{{ item.created }}</small><br><b>{{ item.nickname }}:</b> {{ item.content }}</p>
     {% endfor %}
   </div>
 </form>
@@ -34,9 +38,11 @@
             socket.emit("ws-welcome", {data: "connected"})
             $("#form").on("submit", function(e) {
                 let nickname = $("#nickname").val();
+                let priority = $("#priority").val();
                 let content = $("#content").val();
                 socket.emit("ws-messages", {
                     "nickname": nickname,
+                    "priority": priority,
                     "content": content,
                 })
                 $("#content").val("").focus();
@@ -44,7 +50,11 @@
             })
         })
         socket.on("ws-messages-responses", function(msg) {
-            $("#messages").append("<p><b>" + msg.nickname + ":</b> " + msg.content + "</p>")
+            if (msg.priority == "high") {
+              $("#messages").append("<p style='color:red;'><small>" + msg.created + "</small><br><b>" + msg.nickname + ":</b> " + msg.content + "</p>")
+            } else {
+              $("#messages").append("<p><small>" + msg.created + "</small><br><b>" + msg.nickname + ":</b> " + msg.content + "</p>")
+            }
         })
     </script>
   </body>
